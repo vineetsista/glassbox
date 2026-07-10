@@ -18,6 +18,7 @@ import torch
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from train.gpt import HookPoint
 
 from .fourier import (
     embedding_dft_norms,
@@ -101,10 +102,10 @@ def main() -> None:
     tokens, _ = all_pairs_dataset(p)
     acts: list[torch.Tensor] = []
 
-    def grab(x: torch.Tensor, hp: object) -> None:
+    def grab(x: torch.Tensor, hp: HookPoint) -> None:
         acts.append(x[:, -1, :].detach())
 
-    with torch.no_grad(), model.hooks([("hook_mlp_act", grab)]):  # type: ignore[list-item]
+    with torch.no_grad(), model.hooks([("hook_mlp_act", grab)]):
         for i in range(0, tokens.shape[0], 12769):
             model(tokens[i : i + 12769])
     grid = torch.cat(acts).view(p, p, -1)
@@ -130,7 +131,8 @@ def main() -> None:
     # 5) training curves + progress measures over the whole run
     prog = run_dir / "progress.csv"
     if prog.exists():
-        rows = list(csv.DictReader(open(prog)))
+        with open(prog) as pf:
+            rows = list(csv.DictReader(pf))
         steps = [int(r["step"]) for r in rows]
         fig, axes = plt.subplots(2, 1, figsize=(9, 8), sharex=True)
         axes[0].plot(steps, [float(r["train_acc"]) for r in rows], label="train acc")

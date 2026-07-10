@@ -91,6 +91,8 @@ def apply_rope(x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor) -> torch.T
 
 
 class Attention(nn.Module):
+    causal_mask: torch.Tensor
+
     def __init__(self, cfg: GPTConfig) -> None:
         super().__init__()
         self.cfg = cfg
@@ -158,47 +160,8 @@ class Block(nn.Module):
         return x
 
 
-class GPT(nn.Module):
-    def __init__(self, cfg: GPTConfig) -> None:
-        super().__init__()
-        self.cfg = cfg
-        self.wte = nn.Embedding(cfg.vocab_size, cfg.d_model)
-        self.blocks = nn.ModuleList([Block(cfg) for _ in range(cfg.n_layers)])
-        self.final_norm = RMSNorm(cfg.d_model, cfg.rms_eps)
-        self.hook_embed = HookPoint()
-        self.hook_final_norm = HookPoint()
-
-        cos, sin = _rope_cos_sin(
-            cfg.ctx_len, cfg.d_head, cfg.rope_base, torch.device("cpu"), torch.float32
-        )
-        self.register_buffer("rope_cos", cos, persistent=False)
-        self.register_buffer("rope_sin", sin, persistent=False)
-
-        self.apply(self._init_weights)
-        for module in self.blocks:  # residual-stream projections get depth-scaled init
-            block = cast(Block, module)
-            for w in (block.attn.w_o.weight, block.mlp.w_out.weight):
-                nn.init.normal_(w, std=0.02 / math.sqrt(2 * cfg.n_layers))
-
-        for name, module in self.named_modules():
-            if isinstance(module, HookPoint):
-                module.name = name
-
-    @staticmethod
-    def _init_weights(m: nn.Module) -> None:
-        if isinstance(m, (nn.Linear, nn.Embedding)):
-            nn.init.normal_(m.weight, std=0.02)
-
-    def forward(self, tokens: torch.Tensor) -> torch.Tensor:
-        """tokens [B, T] -> logits [B, T, vocab]. Tied unembedding."""
-        assert tokens.shape[1] <= self.cfg.ctx_len
-        x = self.hook_embed(self.wte(tokens))
-        for block in self.blocks:
-            x = block(x, self.rope_cos, self.rope_sin)
-        x = self.hook_final_norm(self.final_norm(x))
-        return x @ self.wte.weight.T
-
-    # ---- hook utilities -------------------------------------------------
+class HookedModel(nn.Module):
+    """Mixin providing the hook utility surface shared by GPT and GrokModel."""
 
     def hook_points(self) -> Iterator[tuple[str, HookPoint]]:
         for name, module in self.named_modules():
@@ -241,6 +204,47 @@ class GPT(nn.Module):
         with self.hooks([(n, make_fn(n)) for n in wanted]):
             logits = self.forward(tokens)
         return logits, cache
+
+
+class GPT(HookedModel):
+    def __init__(self, cfg: GPTConfig) -> None:
+        super().__init__()
+        self.cfg = cfg
+        self.wte = nn.Embedding(cfg.vocab_size, cfg.d_model)
+        self.blocks = nn.ModuleList([Block(cfg) for _ in range(cfg.n_layers)])
+        self.final_norm = RMSNorm(cfg.d_model, cfg.rms_eps)
+        self.hook_embed = HookPoint()
+        self.hook_final_norm = HookPoint()
+
+        cos, sin = _rope_cos_sin(
+            cfg.ctx_len, cfg.d_head, cfg.rope_base, torch.device("cpu"), torch.float32
+        )
+        self.register_buffer("rope_cos", cos, persistent=False)
+        self.register_buffer("rope_sin", sin, persistent=False)
+
+        self.apply(self._init_weights)
+        for module in self.blocks:  # residual-stream projections get depth-scaled init
+            block = cast(Block, module)
+            for w in (block.attn.w_o.weight, block.mlp.w_out.weight):
+                nn.init.normal_(w, std=0.02 / math.sqrt(2 * cfg.n_layers))
+
+        for name, module in self.named_modules():
+            if isinstance(module, HookPoint):
+                module.name = name
+
+    @staticmethod
+    def _init_weights(m: nn.Module) -> None:
+        if isinstance(m, (nn.Linear, nn.Embedding)):
+            nn.init.normal_(m.weight, std=0.02)
+
+    def forward(self, tokens: torch.Tensor) -> torch.Tensor:
+        """tokens [B, T] -> logits [B, T, vocab]. Tied unembedding."""
+        assert tokens.shape[1] <= self.cfg.ctx_len
+        x = self.hook_embed(self.wte(tokens))
+        for block in self.blocks:
+            x = block(x, self.rope_cos, self.rope_sin)
+        x = self.hook_final_norm(self.final_norm(x))
+        return x @ self.wte.weight.T
 
     def num_params(self, non_embedding: bool = False) -> int:
         n = sum(p.numel() for p in self.parameters())

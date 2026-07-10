@@ -146,7 +146,7 @@ def main() -> None:
 
     # forward through the compiled wrapper; checkpoints always save from `model`
     # so state_dict keys stay clean of _orig_mod prefixes
-    step_model = torch.compile(model) if args.compile else model
+    step_model: torch.nn.Module = torch.compile(model) if args.compile else model  # type: ignore[assignment]
 
     log_path = run_dir / "log.csv"
     new_log = not log_path.exists()

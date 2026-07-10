@@ -16,7 +16,7 @@ from dataclasses import dataclass
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from train.gpt import HookPoint
+from train.gpt import HookedModel, HookPoint
 
 
 @dataclass
@@ -36,7 +36,7 @@ class GrokConfig:
         return self.d_model // self.n_heads
 
 
-class GrokModel(nn.Module):
+class GrokModel(HookedModel):
     def __init__(self, cfg: GrokConfig) -> None:
         super().__init__()
         self.cfg = cfg

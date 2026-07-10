@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import torch
 import torch.nn.functional as F
+from train.gpt import HookPoint
 
 from .model import GrokModel, all_pairs_dataset
 
@@ -116,10 +117,10 @@ def neuron_freq_clustering(model: GrokModel) -> dict[str, torch.Tensor]:
     tokens, _ = all_pairs_dataset(p)
     acts: list[torch.Tensor] = []
 
-    def grab(x: torch.Tensor, hp: object) -> None:
+    def grab(x: torch.Tensor, hp: HookPoint) -> None:
         acts.append(x[:, -1, :].detach())
 
-    with model.hooks([("hook_mlp_act", grab)]):  # type: ignore[list-item]
+    with model.hooks([("hook_mlp_act", grab)]):
         for i in range(0, tokens.shape[0], 12769):
             model(tokens[i : i + 12769])
     grid = torch.cat(acts).view(p, p, -1).permute(2, 0, 1).float()  # [d_mlp, p, p]

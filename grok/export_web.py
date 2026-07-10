@@ -29,6 +29,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
+from train.gpt import HookPoint
 
 from .fourier import (
     embedding_dft_norms,
@@ -80,6 +81,11 @@ def main() -> None:
     train_mask, test_mask = train_test_split(p, run_cfg["train_frac"], run_cfg["seed"])
     probes = probe_pairs(p)
 
+    pat: list[torch.Tensor] = []
+
+    def grab_pattern(x: torch.Tensor, hp: HookPoint) -> None:
+        pat.append(x[:, :, -1, :].detach())  # '=' row: [B, H, 3]
+
     header = {
         "format": "grokpack",
         "p": p,
@@ -120,14 +126,10 @@ def main() -> None:
                 rex = restricted_excluded_losses(logits, kf, train_mask, test_mask)
                 dft = embedding_dft_norms(model.wte.weight[:p].detach(), p)
                 wnorm = float(
-                    sum(w.pow(2).sum() for w in model.parameters()).sqrt()
+                    torch.stack([w.pow(2).sum() for w in model.parameters()]).sum().sqrt()
                 )
-                pat: list[torch.Tensor] = []
-
-                def grab(x: torch.Tensor, hp: object) -> None:
-                    pat.append(x[:, :, -1, :].detach())  # '=' row: [B, H, 3]
-
-                with model.hooks([("hook_pattern", grab)]):  # type: ignore[list-item]
+                pat.clear()
+                with model.hooks([("hook_pattern", grab_pattern)]):
                     model(probes)
 
             row = [metrics["train_loss"], metrics["train_acc"], metrics["test_loss"],

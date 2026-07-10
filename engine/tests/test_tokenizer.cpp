@@ -40,9 +40,8 @@ TEST_CASE("encodings match python fixture exactly") {
 
 TEST_CASE("roundtrip on assorted strings") {
     auto tok = load_fixture_tokenizer();
-    for (const std::string s :
-         {"hello world", "", "a", "  spaces", "tab\ttab", "line\nline", "punct!?...", "it's 42",
-          "caf\xc3\xa9 \xe4\xb8\xad\xe6\x96\x87"}) {
+    for (const std::string s : {"hello world", "", "a", "  spaces", "tab\ttab", "line\nline",
+                                "punct!?...", "it's 42", "caf\xc3\xa9 \xe4\xb8\xad\xe6\x96\x87"}) {
         REQUIRE(tok.decode(tok.encode(s)) == s);
     }
 }

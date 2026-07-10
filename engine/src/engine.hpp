@@ -37,10 +37,9 @@ public:
 
     // Generate up to max_new tokens; on_token fires after each new token with
     // (token_id, features_of_hook_layer). Stops at EOT or a full context.
-    std::string generate(const std::string& prompt, int max_new, const SampleParams& params,
-                         uint64_t seed,
-                         const std::function<void(int, const std::vector<FeatureAct>&)>& on_token =
-                             nullptr) {
+    std::string generate(
+        const std::string& prompt, int max_new, const SampleParams& params, uint64_t seed,
+        const std::function<void(int, const std::vector<FeatureAct>&)>& on_token = nullptr) {
         std::vector<int> ids = tokenizer_.encode(prompt);
         if (ids.empty()) ids.push_back(tokenizer_.eot_id());
         std::vector<float> logits = prefill(ids);

@@ -44,8 +44,7 @@ public:
         const size_t k = static_cast<size_t>(cfg_.k);
         if (acts.size() > k) {
             std::partial_sort(acts.begin(), acts.begin() + static_cast<std::ptrdiff_t>(k),
-                              acts.end(),
-                              [](const FeatureAct& a, const FeatureAct& b) {
+                              acts.end(), [](const FeatureAct& a, const FeatureAct& b) {
                                   return a.value > b.value ||
                                          (a.value == b.value && a.feature < b.feature);
                               });

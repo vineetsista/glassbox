@@ -24,16 +24,21 @@ namespace gbx {
 class Model {
 public:
     explicit Model(const GBXFile& file)
-        : cfg_(file.config()), wte_(file.tensor("wte").data),
+        : cfg_(file.config()),
+          wte_(file.tensor("wte").data),
           final_norm_(file.tensor("final_norm").data) {
         layers_.reserve(static_cast<size_t>(cfg_.n_layers));
         for (int i = 0; i < cfg_.n_layers; ++i) {
             std::string p = "blocks." + std::to_string(i) + ".";
             layers_.push_back(Layer{
-                file.tensor(p + "norm1").data, file.tensor(p + "w_q").data,
-                file.tensor(p + "w_k").data, file.tensor(p + "w_v").data,
-                file.tensor(p + "w_o").data, file.tensor(p + "norm2").data,
-                file.tensor(p + "w_in").data, file.tensor(p + "w_out").data,
+                file.tensor(p + "norm1").data,
+                file.tensor(p + "w_q").data,
+                file.tensor(p + "w_k").data,
+                file.tensor(p + "w_v").data,
+                file.tensor(p + "w_o").data,
+                file.tensor(p + "norm2").data,
+                file.tensor(p + "w_in").data,
+                file.tensor(p + "w_out").data,
             });
         }
         if (file.sae_config().present) sae_.emplace(file, file.sae_config());
@@ -127,9 +132,11 @@ public:
                     for (const auto& [feat, mult] : steering_) {
                         bool active = false;
                         for (const auto& a : last_features_)
-                            if (a.feature == feat) { active = true; break; }
-                        if (!active && mult > 1.0f)
-                            sae_->add_feature(feat, mult, x.data());
+                            if (a.feature == feat) {
+                                active = true;
+                                break;
+                            }
+                        if (!active && mult > 1.0f) sae_->add_feature(feat, mult, x.data());
                     }
                 }
             }

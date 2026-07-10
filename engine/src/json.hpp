@@ -80,13 +80,23 @@ struct Parser {
         skip_ws();
         char c = peek();
         switch (c) {
-            case '{': return parse_object();
-            case '[': return parse_array();
-            case '"': return Value(parse_string());
-            case 't': literal("true"); return Value(true);
-            case 'f': literal("false"); return Value(false);
-            case 'n': literal("null"); return Value(nullptr);
-            default: return parse_number();
+            case '{':
+                return parse_object();
+            case '[':
+                return parse_array();
+            case '"':
+                return Value(parse_string());
+            case 't':
+                literal("true");
+                return Value(true);
+            case 'f':
+                literal("false");
+                return Value(false);
+            case 'n':
+                literal("null");
+                return Value(nullptr);
+            default:
+                return parse_number();
         }
     }
 
@@ -99,7 +109,10 @@ struct Parser {
         expect('{');
         Object obj;
         skip_ws();
-        if (peek() == '}') { ++i; return Value(std::move(obj)); }
+        if (peek() == '}') {
+            ++i;
+            return Value(std::move(obj));
+        }
         while (true) {
             skip_ws();
             std::string key = parse_string();
@@ -118,7 +131,10 @@ struct Parser {
         expect('[');
         Array arr;
         skip_ws();
-        if (peek() == ']') { ++i; return Value(std::move(arr)); }
+        if (peek() == ']') {
+            ++i;
+            return Value(std::move(arr));
+        }
         while (true) {
             arr.push_back(parse_value());
             skip_ws();
@@ -138,16 +154,35 @@ struct Parser {
             if (c == '\\') {
                 char e = next();
                 switch (e) {
-                    case '"': out += '"'; break;
-                    case '\\': out += '\\'; break;
-                    case '/': out += '/'; break;
-                    case 'b': out += '\b'; break;
-                    case 'f': out += '\f'; break;
-                    case 'n': out += '\n'; break;
-                    case 'r': out += '\r'; break;
-                    case 't': out += '\t'; break;
-                    case 'u': out += parse_unicode_escape(); break;
-                    default: fail("bad escape");
+                    case '"':
+                        out += '"';
+                        break;
+                    case '\\':
+                        out += '\\';
+                        break;
+                    case '/':
+                        out += '/';
+                        break;
+                    case 'b':
+                        out += '\b';
+                        break;
+                    case 'f':
+                        out += '\f';
+                        break;
+                    case 'n':
+                        out += '\n';
+                        break;
+                    case 'r':
+                        out += '\r';
+                        break;
+                    case 't':
+                        out += '\t';
+                        break;
+                    case 'u':
+                        out += parse_unicode_escape();
+                        break;
+                    default:
+                        fail("bad escape");
                 }
             } else {
                 out += c;
@@ -162,10 +197,14 @@ struct Parser {
             for (int k = 0; k < 4; ++k) {
                 char c = next();
                 cp <<= 4;
-                if (c >= '0' && c <= '9') cp |= static_cast<uint32_t>(c - '0');
-                else if (c >= 'a' && c <= 'f') cp |= static_cast<uint32_t>(c - 'a' + 10);
-                else if (c >= 'A' && c <= 'F') cp |= static_cast<uint32_t>(c - 'A' + 10);
-                else fail("bad \\u escape");
+                if (c >= '0' && c <= '9')
+                    cp |= static_cast<uint32_t>(c - '0');
+                else if (c >= 'a' && c <= 'f')
+                    cp |= static_cast<uint32_t>(c - 'a' + 10);
+                else if (c >= 'A' && c <= 'F')
+                    cp |= static_cast<uint32_t>(c - 'A' + 10);
+                else
+                    fail("bad \\u escape");
             }
             return cp;
         };

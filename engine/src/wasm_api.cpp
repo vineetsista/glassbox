@@ -26,7 +26,7 @@
 namespace {
 
 std::unique_ptr<gbx::Engine> g_engine;
-std::vector<int> g_ids;                 // full token sequence (prompt + generated)
+std::vector<int> g_ids;  // full token sequence (prompt + generated)
 std::vector<float> g_logits;
 std::vector<int> g_tokenize_buf;
 std::string g_text_buf;
@@ -52,12 +52,17 @@ GBX_EXPORT int gbx_load(const uint8_t* data, int len) {
     }
 }
 
-GBX_EXPORT int gbx_vocab_size() { return g_engine ? g_engine->model().cfg().vocab_size : -1; }
-GBX_EXPORT int gbx_ctx_len() { return g_engine ? g_engine->model().cfg().ctx_len : -1; }
-GBX_EXPORT int gbx_has_sae() { return g_engine && g_engine->model().has_sae() ? 1 : 0; }
+GBX_EXPORT int gbx_vocab_size() {
+    return g_engine ? g_engine->model().cfg().vocab_size : -1;
+}
+GBX_EXPORT int gbx_ctx_len() {
+    return g_engine ? g_engine->model().cfg().ctx_len : -1;
+}
+GBX_EXPORT int gbx_has_sae() {
+    return g_engine && g_engine->model().has_sae() ? 1 : 0;
+}
 GBX_EXPORT int gbx_n_features() {
-    return g_engine && g_engine->model().has_sae() ? g_engine->model().sae()->cfg().n_features
-                                                   : 0;
+    return g_engine && g_engine->model().has_sae() ? g_engine->model().sae()->cfg().n_features : 0;
 }
 
 // ---- tokenizer ----------------------------------------------------------
@@ -113,8 +118,12 @@ GBX_EXPORT int gbx_sample(float temperature, int top_k) {
     return gbx::sample(g_logits.data(), g_engine->model().cfg().vocab_size, p, *g_rng);
 }
 
-GBX_EXPORT int gbx_eot_id() { return g_engine ? g_engine->tokenizer().eot_id() : -1; }
-GBX_EXPORT int gbx_seq_len() { return static_cast<int>(g_ids.size()); }
+GBX_EXPORT int gbx_eot_id() {
+    return g_engine ? g_engine->tokenizer().eot_id() : -1;
+}
+GBX_EXPORT int gbx_seq_len() {
+    return static_cast<int>(g_ids.size());
+}
 GBX_EXPORT int gbx_seq_at(int i) {
     return (i >= 0 && static_cast<size_t>(i) < g_ids.size()) ? g_ids[static_cast<size_t>(i)] : -1;
 }
@@ -126,10 +135,9 @@ GBX_EXPORT int gbx_top_logits(int* ids, float* vals, int n) {
     n = n < vocab ? n : vocab;
     std::vector<int> order(static_cast<size_t>(vocab));
     for (int i = 0; i < vocab; ++i) order[static_cast<size_t>(i)] = i;
-    std::partial_sort(order.begin(), order.begin() + n, order.end(),
-                      [&](int a, int b) {
-                          return g_logits[static_cast<size_t>(a)] > g_logits[static_cast<size_t>(b)];
-                      });
+    std::partial_sort(order.begin(), order.begin() + n, order.end(), [&](int a, int b) {
+        return g_logits[static_cast<size_t>(a)] > g_logits[static_cast<size_t>(b)];
+    });
     for (int i = 0; i < n; ++i) {
         ids[i] = order[static_cast<size_t>(i)];
         vals[i] = g_logits[static_cast<size_t>(order[static_cast<size_t>(i)])];

@@ -76,13 +76,11 @@ TEST_CASE("sae encode/decode match pytorch fixture") {
         // sparse acts must match the dense fixture row
         std::vector<float> dense(nf, 0.f);
         for (const auto& a : acts) dense[static_cast<size_t>(a.feature)] = a.value;
-        for (size_t j = 0; j < nf; ++j)
-            REQUIRE(std::fabs(dense[j] - z_ref[r * nf + j]) <= 1e-4f);
+        for (size_t j = 0; j < nf; ++j) REQUIRE(std::fabs(dense[j] - z_ref[r * nf + j]) <= 1e-4f);
 
         std::vector<float> xhat(d);
         sae.decode(acts, xhat.data());
-        for (size_t i = 0; i < d; ++i)
-            REQUIRE(std::fabs(xhat[i] - xhat_ref[r * d + i]) <= 1e-4f);
+        for (size_t i = 0; i < d; ++i) REQUIRE(std::fabs(xhat[i] - xhat_ref[r * d + i]) <= 1e-4f);
     }
 }
 
@@ -101,8 +99,8 @@ TEST_CASE("steering changes logits and clears cleanly") {
         diff = std::max(diff, std::fabs(base[i] - steered[i]));
         restore_diff = std::max(restore_diff, std::fabs(base[i] - restored[i]));
     }
-    REQUIRE(diff > 1e-4f);          // steering must do something
-    REQUIRE(restore_diff <= 1e-6f); // and be fully reversible
+    REQUIRE(diff > 1e-4f);           // steering must do something
+    REQUIRE(restore_diff <= 1e-6f);  // and be fully reversible
 }
 
 TEST_CASE("generation is deterministic per seed") {

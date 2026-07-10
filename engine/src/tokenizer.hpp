@@ -87,13 +87,34 @@ private:
         size_t j = i;
         if (c == ' ' && j + 1 < n) {
             char d = s[j + 1];
-            if (is_alpha(d)) { j += 1; while (j < n && is_alpha(s[j])) ++j; return j; }
-            if (is_digit(d)) { j += 1; while (j < n && is_digit(s[j])) ++j; return j; }
-            if (is_punct(d)) { j += 1; while (j < n && is_punct(s[j])) ++j; return j; }
+            if (is_alpha(d)) {
+                j += 1;
+                while (j < n && is_alpha(s[j])) ++j;
+                return j;
+            }
+            if (is_digit(d)) {
+                j += 1;
+                while (j < n && is_digit(s[j])) ++j;
+                return j;
+            }
+            if (is_punct(d)) {
+                j += 1;
+                while (j < n && is_punct(s[j])) ++j;
+                return j;
+            }
         }
-        if (is_alpha(c)) { while (j < n && is_alpha(s[j])) ++j; return j; }
-        if (is_digit(c)) { while (j < n && is_digit(s[j])) ++j; return j; }
-        if (is_punct(c)) { while (j < n && is_punct(s[j])) ++j; return j; }
+        if (is_alpha(c)) {
+            while (j < n && is_alpha(s[j])) ++j;
+            return j;
+        }
+        if (is_digit(c)) {
+            while (j < n && is_digit(s[j])) ++j;
+            return j;
+        }
+        if (is_punct(c)) {
+            while (j < n && is_punct(s[j])) ++j;
+            return j;
+        }
         // whitespace run: \s+(?!\S) | \s+ with the GPT-2 backtracking effect —
         // if the run is followed by a non-space, the last space attaches to it
         size_t end = i;

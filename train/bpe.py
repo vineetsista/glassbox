@@ -8,6 +8,7 @@ encode -> decode is the identity on arbitrary unicode.
 
 from __future__ import annotations
 
+import itertools
 import json
 import re
 from collections import Counter
@@ -128,7 +129,7 @@ def train_bpe(text: str, vocab_size: int, verbose: bool = False) -> BPETokenizer
     pair_words: dict[tuple[int, int], set[int]] = {}
     for wi, ids in enumerate(words):
         f = freqs[wi]
-        for a, b in zip(ids, ids[1:]):
+        for a, b in itertools.pairwise(ids):
             pair_counts[(a, b)] += f
             pair_words.setdefault((a, b), set()).add(wi)
 
@@ -197,4 +198,4 @@ def _inc(
 
 
 def _contains_pair(ids: list[int], pair: tuple[int, int]) -> bool:
-    return any(a == pair[0] and b == pair[1] for a, b in zip(ids, ids[1:]))
+    return any(a == pair[0] and b == pair[1] for a, b in itertools.pairwise(ids))

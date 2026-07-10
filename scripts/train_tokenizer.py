@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from train.bpe import train_bpe  # noqa: E402
+from train.bpe import train_bpe
 
 
 def main() -> None:
@@ -29,6 +29,8 @@ def main() -> None:
         text = f.read(budget)
     # avoid a torn utf-8 char / word at the cut point
     text = text[: text.rfind("\n")]
+    # the story sentinel is corpus plumbing, not language; never learn merges for it
+    text = text.replace("<|endofstory|>", "")
     print(f"training BPE on {len(text.encode('utf-8')) / 1e6:.1f} MB, vocab {args.vocab_size}")
 
     t0 = time.time()

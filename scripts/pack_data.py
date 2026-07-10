@@ -20,7 +20,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from train.bpe import BPETokenizer  # noqa: E402
+from train.bpe import BPETokenizer
 
 _tok: BPETokenizer | None = None
 _tok_path: str = ""
@@ -45,8 +45,9 @@ def main() -> None:
     args = ap.parse_args()
 
     text = Path(args.corpus).read_text(encoding="utf-8")
-    docs = [d.strip() for d in text.split("\n\n") if d.strip()]
-    print(f"{len(docs)} docs")
+    sep = "\n<|endofstory|>\n" if "<|endofstory|>" in text else "\n\n"
+    docs = [d.strip() for d in text.split(sep) if d.strip()]
+    print(f"{len(docs)} docs (sep={sep!r})")
 
     tok = BPETokenizer.load(args.tokenizer)
     t0 = time.time()

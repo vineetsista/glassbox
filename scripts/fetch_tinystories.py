@@ -1,8 +1,9 @@
 """Download TinyStories via `datasets` and write a plain-text corpus.
 
-Output: data/tinystories_train.txt (one story per line block, blank-line
-separated) capped at --max-mb, plus data/tinystories_val.txt from the
-validation split. `datasets` is allowed purely for download (brief section 2).
+Output: data/tinystories_train.txt capped at --max-mb, plus
+data/tinystories_val.txt from the validation split. Stories contain internal
+blank lines, so they are separated by an explicit sentinel line (SEP) rather
+than by blank lines. `datasets` is allowed purely for download (brief sec. 2).
 
 Fallback if HF is unreachable: scripts/fetch_gutenberg_kids.py.
 """
@@ -11,6 +12,8 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+
+SEP = "\n<|endofstory|>\n"
 
 
 def main() -> None:
@@ -33,7 +36,7 @@ def main() -> None:
             text = row["text"].strip()
             if not text:
                 continue
-            chunk = text + "\n\n"
+            chunk = text + SEP
             f.write(chunk)
             written += len(chunk.encode("utf-8"))
             n_docs += 1
@@ -48,7 +51,7 @@ def main() -> None:
             text = row["text"].strip()
             if not text:
                 continue
-            chunk = text + "\n\n"
+            chunk = text + SEP
             f.write(chunk)
             vw += len(chunk.encode("utf-8"))
             if vw >= 20 * 1024 * 1024:

@@ -25,6 +25,16 @@ CPU-scale results rather than pretending to GPU-scale quality.
 - `gh` CLI: not installed and no auth available -> repo stays local; push
   instructions go in the final report per brief section 1.
 
+## 2026-07-09 — D004: Story separator sentinel
+
+First pack of TinyStories used blank lines as story separators, but stories
+contain internal blank lines between paragraphs -> 2.47M "docs" from 465k
+stories, i.e. <|endoftext|> was landing mid-story. Fixed by separating stories
+with an explicit sentinel line ("<|endofstory|>") at fetch time; pack_data
+splits on it and never tokenizes it. The BPE tokenizer (trained on clean story
+text before the sentinel existed) is unaffected and was NOT retrained;
+train_tokenizer.py now strips the sentinel for future regeneration.
+
 ## 2026-07-09 — D003: File authoring path
 
 Repo lives in the WSL ext4 filesystem (~/projects/glassbox), never /mnt/c or

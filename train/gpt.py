@@ -24,8 +24,9 @@ replaces the value (interventions); returning None observes only.
 from __future__ import annotations
 
 import math
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from typing import Callable, Iterator
+from typing import cast
 
 import torch
 import torch.nn as nn
@@ -173,7 +174,8 @@ class GPT(nn.Module):
         self.register_buffer("rope_sin", sin, persistent=False)
 
         self.apply(self._init_weights)
-        for block in self.blocks:  # residual-stream projections get depth-scaled init
+        for module in self.blocks:  # residual-stream projections get depth-scaled init
+            block = cast(Block, module)
             for w in (block.attn.w_o.weight, block.mlp.w_out.weight):
                 nn.init.normal_(w, std=0.02 / math.sqrt(2 * cfg.n_layers))
 
@@ -183,9 +185,7 @@ class GPT(nn.Module):
 
     @staticmethod
     def _init_weights(m: nn.Module) -> None:
-        if isinstance(m, nn.Linear):
-            nn.init.normal_(m.weight, std=0.02)
-        elif isinstance(m, nn.Embedding):
+        if isinstance(m, (nn.Linear, nn.Embedding)):
             nn.init.normal_(m.weight, std=0.02)
 
     def forward(self, tokens: torch.Tensor) -> torch.Tensor:

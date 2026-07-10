@@ -23,7 +23,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from .config import TIER_S, GPTConfig, TrainConfig
+from .config import TIER_S, TrainConfig
 from .data import PackedDataset
 from .gpt import GPT
 
@@ -37,7 +37,9 @@ def lr_at(step: int, tc: TrainConfig) -> float:
     return tc.lr * (tc.lr_min_frac + (1 - tc.lr_min_frac) * cos)
 
 
-def save_ckpt(path: Path, model: GPT, opt: torch.optim.Optimizer, step: int, rng_state: dict) -> None:
+def save_ckpt(
+    path: Path, model: GPT, opt: torch.optim.Optimizer, step: int, rng_state: object
+) -> None:
     tmp = path.with_suffix(".tmp")
     torch.save(
         {
@@ -139,7 +141,7 @@ def main() -> None:
 
     log_path = run_dir / "log.csv"
     new_log = not log_path.exists()
-    log_f = open(log_path, "a", newline="")
+    log_f = open(log_path, "a", newline="")  # noqa: SIM115 - lives for the whole run
     logger = csv.writer(log_f)
     if new_log:
         logger.writerow(["step", "train_loss", "val_loss", "lr", "tokens_per_sec"])

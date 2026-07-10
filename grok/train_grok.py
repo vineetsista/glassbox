@@ -33,9 +33,10 @@ def main() -> None:
     ap.add_argument("--run", default="runs/grok")
     ap.add_argument("--steps", type=int, default=30000)
     ap.add_argument("--resume", action="store_true")
+    ap.add_argument("--threads", type=int, default=None)
     args = ap.parse_args()
 
-    torch.set_num_threads(max(1, (os.cpu_count() or 4) - 2))
+    torch.set_num_threads(args.threads or max(1, (os.cpu_count() or 4) - 2))
     torch.manual_seed(SEED)
 
     run_dir = Path(args.run)

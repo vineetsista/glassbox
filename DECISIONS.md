@@ -25,6 +25,12 @@ CPU-scale results rather than pretending to GPU-scale quality.
 - `gh` CLI: not installed and no auth available -> repo stays local; push
   instructions go in the final report per brief section 1.
 
+## 2026-07-09 — D003: File authoring path
+
+Repo lives in the WSL ext4 filesystem (~/projects/glassbox), never /mnt/c or
+OneDrive, per brief. Files are authored through the \\wsl.localhost UNC bridge;
+all builds/tests/training run natively inside WSL.
+
 ## 2026-07-09 — D004: Story separator sentinel
 
 First pack of TinyStories used blank lines as story separators, but stories
@@ -35,8 +41,19 @@ splits on it and never tokenizes it. The BPE tokenizer (trained on clean story
 text before the sentinel existed) is unaffected and was NOT retrained;
 train_tokenizer.py now strips the sentinel for future regeneration.
 
-## 2026-07-09 — D003: File authoring path
+## 2026-07-09 — D005: Compute recalibration after measuring the actual CPU
 
-Repo lives in the WSL ext4 filesystem (~/projects/glassbox), never /mnt/c or
-OneDrive, per brief. Files are authored through the \\wsl.localhost UNC bridge;
-all builds/tests/training run natively inside WSL.
+The CPU is an i7-1250U: a 9W ultralight part, 2 P-cores + 8 E-cores. Measured
+LM training throughput (tier S, batch 32, ctx 256): ~680 tok/s eager /
+~970 tok/s with torch.compile at 6 threads while grok holds 4 threads.
+Decisions:
+- torch.compile added to train_lm (--compile, ~1.4x; hooks unused in training,
+  checkpoints saved from the uncompiled module so keys stay clean).
+- Attention builds its causal mask once as a buffer instead of per forward.
+- Thread split while both jobs run: grok 4, LM 8 (oversubscribing 12 threads
+  with 2 PyTorch processes caused ~10x slowdowns from spin contention).
+- LM run sized honestly for this machine: 6000 steps x 8192 tok = 49M tokens
+  (~0.5 epoch of the 105M-token pack), cosine completing at step 6000. This is
+  a deliberate scale-down from the notional 60k-step config; the README will
+  report the model as what it is: a ~2.6M-param CPU-trained TinyStories model.
+- Every number above is from timed runs on this box, not estimates.

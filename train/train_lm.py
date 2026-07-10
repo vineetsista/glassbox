@@ -55,7 +55,7 @@ def save_ckpt(
 
 
 @torch.no_grad()
-def eval_loss(model: GPT, ds: PackedDataset, tc: TrainConfig, seed: int) -> float:
+def eval_loss(model: torch.nn.Module, ds: PackedDataset, tc: TrainConfig, seed: int) -> float:
     model.eval()
     rng = np.random.default_rng(seed)  # fixed eval batches every time
     losses = []
@@ -102,9 +102,12 @@ def main() -> None:
     ap.add_argument("--resume", action="store_true")
     ap.add_argument("--max-steps", type=int, default=None)
     ap.add_argument("--batch-size", type=int, default=None)
+    ap.add_argument("--threads", type=int, default=None)
+    ap.add_argument("--compile", action="store_true", help="torch.compile the step fn (~1.4x on CPU)")
+    ap.add_argument("--ckpt-every", type=int, default=None)
     args = ap.parse_args()
 
-    torch.set_num_threads(max(1, (os.cpu_count() or 4) - 2))
+    torch.set_num_threads(args.threads or max(1, (os.cpu_count() or 4) - 2))
 
     run_dir = Path(args.run)
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -113,6 +116,8 @@ def main() -> None:
         tc.max_steps = args.max_steps
     if args.batch_size:
         tc.batch_size = args.batch_size
+    if args.ckpt_every:
+        tc.ckpt_every = args.ckpt_every
     cfg = TIER_S
 
     torch.manual_seed(tc.seed)
@@ -139,6 +144,10 @@ def main() -> None:
     ds = PackedDataset(args.data, cfg.ctx_len)
     print(f"model params: {model.num_params():,} | tokens in dataset: {len(ds.tokens):,}")
 
+    # forward through the compiled wrapper; checkpoints always save from `model`
+    # so state_dict keys stay clean of _orig_mod prefixes
+    step_model = torch.compile(model) if args.compile else model
+
     log_path = run_dir / "log.csv"
     new_log = not log_path.exists()
     log_f = open(log_path, "a", newline="")  # noqa: SIM115 - lives for the whole run
@@ -160,7 +169,7 @@ def main() -> None:
         opt.zero_grad(set_to_none=True)
         for _ in range(tc.grad_accum):
             x, y = ds.batch(tc.batch_size, rng)
-            logits = model(x)
+            logits = step_model(x)
             loss = F.cross_entropy(logits.view(-1, logits.shape[-1]), y.reshape(-1))
             (loss / tc.grad_accum).backward()
             tokens_since += x.numel()
@@ -174,7 +183,7 @@ def main() -> None:
             tps = tokens_since / dt if dt > 0 else 0.0
             val = ""
             if (step + 1) % tc.eval_every == 0:
-                val = f"{eval_loss(model, ds, tc, seed=999):.4f}"
+                val = f"{eval_loss(step_model, ds, tc, seed=999):.4f}"
             avg = running_loss / max(1, running_n)
             logger.writerow([step + 1, f"{avg:.4f}", val, f"{lr:.2e}", f"{tps:.0f}"])
             log_f.flush()

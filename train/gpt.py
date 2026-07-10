@@ -104,6 +104,8 @@ class Attention(nn.Module):
         self.hook_v = HookPoint()
         self.hook_pattern = HookPoint()
         self.hook_z = HookPoint()
+        mask = torch.triu(torch.ones(cfg.ctx_len, cfg.ctx_len, dtype=torch.bool), diagonal=1)
+        self.register_buffer("causal_mask", mask, persistent=False)
 
     def forward(self, x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor) -> torch.Tensor:
         b, t, d = x.shape
@@ -117,8 +119,7 @@ class Attention(nn.Module):
         v = self.hook_v(split(self.w_v(x)))
 
         scores = q @ k.transpose(-2, -1) / math.sqrt(dh)  # [B, H, T, T]
-        mask = torch.triu(torch.ones(t, t, dtype=torch.bool, device=x.device), diagonal=1)
-        scores = scores.masked_fill(mask, float("-inf"))
+        scores = scores.masked_fill(self.causal_mask[:t, :t], float("-inf"))
         pattern = self.hook_pattern(F.softmax(scores, dim=-1))
         z = self.hook_z(pattern @ v)  # [B, H, T, dh]
         z = z.transpose(1, 2).reshape(b, t, d)

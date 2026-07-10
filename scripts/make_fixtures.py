@@ -16,16 +16,15 @@ import json
 import sys
 from pathlib import Path
 
-import numpy as np
 import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from scripts.export_gbx import export_gbx  # noqa: E402
-from sae.model import SAEConfig, TopKSAE  # noqa: E402
-from train.bpe import train_bpe  # noqa: E402
-from train.config import GPTConfig  # noqa: E402
-from train.gpt import GPT  # noqa: E402
+from sae.model import SAEConfig, TopKSAE
+from scripts.export_gbx import export_gbx
+from train.bpe import train_bpe
+from train.config import GPTConfig
+from train.gpt import GPT
 
 FIXTURE_CFG = GPTConfig(
     vocab_size=300, d_model=32, n_layers=2, n_heads=4, d_mlp=128, ctx_len=16

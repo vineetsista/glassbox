@@ -31,9 +31,9 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from train.bpe import BPETokenizer  # noqa: E402
-from train.config import GPTConfig  # noqa: E402
-from train.gpt import GPT  # noqa: E402
+from train.bpe import BPETokenizer
+from train.config import GPTConfig
+from train.gpt import GPT
 
 ALIGN = 64
 

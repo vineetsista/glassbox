@@ -1,0 +1,30 @@
+[project]
+name = "glassbox"
+version = "0.1.0"
+description = "An interactive interpretability instrument: from-scratch transformers, SAEs, and a browser-based microscope."
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["train", "grok", "sae", "scripts", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+ignore = [
+  "E501",   # line length handled by formatter where it matters
+  "SIM108", # ternary is not always clearer
+]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+check_untyped_defs = true
+ignore_missing_imports = true
+exclude = ["\\.venv"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

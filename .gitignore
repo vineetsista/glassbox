@@ -1,0 +1,31 @@
+# python
+.venv/
+__pycache__/
+*.pyc
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# data and artifacts (large, regenerable)
+data/
+runs/
+!runs/.gitkeep
+*.bin
+*.npy
+*.memmap
+!tests/fixtures/**/*.bin
+
+# native builds
+engine/build*/
+engine/build-wasm*/
+
+# web
+web/node_modules/
+web/dist/
+web/public/assets/*.gbx
+web/public/assets/*.grokpack
+
+# misc
+*.log
+nohup.out
+.DS_Store

@@ -26,6 +26,12 @@ Date: 2026-07-09
 - mypy caught a real bug: GrokModel initially lacked the hook utilities it
   was being called with (would have crashed at runtime).
 
-## Run (in flight at close of phase)
-- runs/lm_s: 6000 steps x 8192 tok = 49M tokens, lr 3e-3 cosine, seed 1337.
-  Sized honestly for a 9W laptop CPU (D005): ~12-16h wall clock.
+## Run (completed 2026-07-11)
+- runs/lm_s: 6000 steps x 8192 tok = 49M tokens (~0.47 epoch), lr 3e-3
+  cosine, seed 1337, torch.compile, 8 threads.
+- Final: train loss 1.906, val loss 1.921 (fixed-seed heldout batches).
+  Curves overlap throughout — at half an epoch nothing repeats, so nothing
+  overfits; loss still falling at the end (compute-bound). loss.png archived
+  to docs/figures/lm_loss.png.
+- Throughput 966-3203 tok/s depending on core contention with the grok run
+  (D005/D006); ~6h of real compute spread over 2 days of laptop sleep.

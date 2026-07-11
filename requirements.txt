@@ -1,0 +1,6 @@
+# Runtime deps. Install CPU torch first:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+# then: pip install -r requirements.txt
+numpy
+datasets
+matplotlib

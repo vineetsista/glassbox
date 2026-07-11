@@ -57,3 +57,18 @@ Decisions:
   a deliberate scale-down from the notional 60k-step config; the README will
   report the model as what it is: a ~2.6M-param CPU-trained TinyStories model.
 - Every number above is from timed runs on this box, not estimates.
+
+## 2026-07-11 — D006: Grok run stopped at step 7600 (of a nominal 30000)
+
+Test accuracy reached 100.0% at step 3300 and losses kept shrinking through
+7600 (test 5.4e-5). 77 checkpoints capture the full arc: memorization
+(~200), plateau, transition (~2000-3000), and 4300 steps of weight-decay
+cleanup. The remaining 22k steps buy nothing for the exhibit and would cost
+~6h of CPU needed by the LM run, which shares this laptop. Decision: stop at
+7600, free 4 threads for the LM. Post-hoc analysis confirms the Fourier
+circuit (docs/figures/grok/findings.json): key freqs {9,27,40,43,45} hold
+90.6% of embedding power; 90.0% of MLP neurons put >85% of their non-DC
+power on one frequency; restricted-test loss 1.1e-5 vs excluded-train 10.7.
+Honest wrinkle worth keeping: frequency 27 is strong in the embedding but no
+neuron cluster is dominated by it - the MLP evidently uses only 4 of the 5
+embedded frequencies.

@@ -1,0 +1,30 @@
+{
+  "final_step": 7600,
+  "final_metrics": {
+    "train_loss": 1.1972283573413733e-05,
+    "train_acc": 1.0,
+    "test_loss": 5.443895497592166e-05,
+    "test_acc": 1.0
+  },
+  "key_freqs": [
+    9,
+    27,
+    40,
+    43,
+    45
+  ],
+  "emb_power_frac_in_key_freqs": 0.9062555425710503,
+  "neurons_frac_gt_085": 0.900390625,
+  "neuron_dominant_freq_counts": {
+    "9": 94,
+    "40": 139,
+    "43": 136,
+    "45": 143
+  },
+  "final_restricted_excluded": {
+    "restricted_test": 1.0854374522750732e-05,
+    "excluded_train": 10.74151611328125,
+    "full_test": 5.442837209557183e-05,
+    "full_train": 1.1972034371865448e-05
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "sae": {
+    "d_in": 192,
+    "expansion": 8,
+    "k": 32
+  },
+  "train": {
+    "seed": 4242,
+    "batch_size": 4096,
+    "lr": 0.0003,
+    "max_steps": 20000,
+    "dead_window": 500,
+    "resample_every": 2000,
+    "log_every": 50,
+    "ckpt_every": 1000
+  },
+  "acts_meta": {
+    "hook": "blocks.2.hook_resid_post",
+    "ckpt": "runs/lm_s/latest.pt",
+    "ckpt_step": 6000,
+    "data": "data/tinystories.bin",
+    "n_tokens": 20000000,
+    "n_windows": 78125,
+    "ctx_len": 256,
+    "d_model": 192,
+    "dtype": "float16"
+  }
+}

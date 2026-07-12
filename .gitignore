@@ -8,8 +8,15 @@ __pycache__/
 
 # data and artifacts (large, regenerable)
 data/
-runs/
+runs/*
 !runs/.gitkeep
+# ...but the training logs ARE the receipts for every reported number
+!runs/engine_bench.txt
+!runs/*/
+runs/*/*
+!runs/*/log.csv
+!runs/*/progress.csv
+!runs/*/config.json
 *.bin
 *.npy
 *.memmap

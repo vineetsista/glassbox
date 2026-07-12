@@ -41,11 +41,18 @@ still falling at step 6000 — the model is compute-bound, not data-bound.
 | excluded train loss (key freqs removed) | 10.7 |
 | training rate | ~1.1 it/s full-batch (12769 x 3) at 4 threads |
 
-## SAE (runs/sae_l2/log.csv — filled by the pipeline run)
+## SAE (runs/sae_l2/log.csv)
 
-See runs/sae_l2/log.csv; summary lands in phase_reports/phase3_sae.md after
-the 20k-step run. Dry-run reference (300 steps, 200k-token cache): FVU 0.164,
-0 dead features, 4.6-6.9k tok/s at 3 threads.
+| metric | value |
+|---|---|
+| training data | 20,000,000 cached fp16 activations (blocks.2.hook_resid_post) |
+| steps | 20,000 x batch 4096 (~82M samples, ~4.1 epochs over the cache) |
+| final FVU | 0.0976 |
+| dead features (no fire in 500 steps) | 0 of 1536, throughout |
+| L0 | 32 structurally (top-k) |
+| mean active-feature activation | 1.68 |
+| training throughput | ~15,000 activations/s (10 threads) |
+| activation caching | 20M tokens in ~1h42m (~4,500 tok/s inference) |
 
 ## C++ engine
 
@@ -54,8 +61,8 @@ the 20k-step run. Dry-run reference (300 steps, 200k-token cache): FVU 0.164,
 | logit parity vs PyTorch (contract 1e-3) | max abs diff 1.8e-07 (engine_tests / engine_cli parity) |
 | tokenizer id parity on fixtures | exact |
 | SAE encode/decode parity | <= 1e-4 |
-| native generation, tier-S model | see runs/engine_bench.txt (single thread, scalar autovec) |
-| dry-run generation (step-800 ckpt, LM training concurrently) | 406 tok/s |
+| native generation, tier-S model (1 thread) | 1,398 tok/s (runs/engine_bench.txt) |
+| in-browser WASM generation (headless chromium) | >= 340 tok/s (240 tokens in <=0.7s; lower bound, poll-interval limited) |
 | wasm binary size | 92,812 B (+12,365 B JS glue) |
 | GBX bundle (model+tokenizer+SAE) | 12.6 MB fp32 |
 

@@ -34,6 +34,7 @@ if(EMSCRIPTEN)
         -sALLOW_MEMORY_GROWTH=1
         -sINITIAL_MEMORY=64MB
         -sSTACK_SIZE=1MB
+        -sEXPORTED_FUNCTIONS=_malloc,_free
         -sEXPORTED_RUNTIME_METHODS=ccall,cwrap,HEAPU8,HEAPF32,HEAP32
         -sENVIRONMENT=web,worker
         --no-entry)

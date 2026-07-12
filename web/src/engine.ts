@@ -22,13 +22,15 @@ export class GlassboxEngine {
   }
 
   static async load(assetBase = "assets"): Promise<GlassboxEngine> {
-    // dynamic import of the emscripten factory
-    const url = `${assetBase}/glassbox.js`;
+    // resolve against the PAGE url, not the bundled module url — a bare
+    // relative specifier would resolve inside dist/assets/ and 404
+    const base = new URL(`${assetBase}/`, document.baseURI).href;
+    const url = `${base}glassbox.js`;
     const factory = (await import(/* @vite-ignore */ url)).default as (opts?: object) => Promise<EmModule>;
     const m = await factory({
-      locateFile: (f: string) => `${assetBase}/${f}`,
+      locateFile: (f: string) => `${base}${f}`,
     });
-    const gbxResp = await fetch(`${assetBase}/model.gbx`);
+    const gbxResp = await fetch(`${base}model.gbx`);
     if (!gbxResp.ok) throw new Error(`model.gbx: HTTP ${gbxResp.status}`);
     const bytes = new Uint8Array(await gbxResp.arrayBuffer());
     const ptr = m._malloc(bytes.length);

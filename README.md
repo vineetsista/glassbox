@@ -1,5 +1,8 @@
 # GLASSBOX
 
+**Live demo: https://vineetsista.github.io/glassbox/** (~15MB of model +
+data downloads on first visit; everything runs in your browser)
+
 An interactive interpretability instrument. Small transformers trained from
 scratch, their internal features extracted with a sparse autoencoder, and a
 zero-backend browser app where you can watch grokking unfold, inspect live
